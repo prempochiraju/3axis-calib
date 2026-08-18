@@ -1,0 +1,157 @@
+NRF52840 DK + ADXL362 OFFLINE OFFICE GUIDE
+===========================================
+
+STOP: These instructions assume the small EVAL-ADXL362Z breakout board.
+If your board is the large ARDZ shield or datalogger, do not connect it until
+you verify its connector/jumper documentation.
+
+1. WIRING (POWER OFF WHILE CONNECTING)
+--------------------------------------
+nRF52840 DK       EVAL-ADXL362Z
+3V3               VS
+3V3               VDD I/O
+GND               GND
+P0.31             SCLK
+P0.30             MOSI
+P0.29             MISO
+P0.28             CS
+
+Leave INT1 and INT2 disconnected. Never use the 5 V pin.
+
+2. SOFTWARE NEEDED
+------------------
+- Visual Studio Code
+- nRF Connect for VS Code extension
+- nRF Connect SDK and its toolchain
+
+3. OPEN AND BUILD
+-----------------
+1) Connect the DK to the PC using the USB connector beside the debugger MCU.
+2) Turn the DK power switch ON.
+3) Open VS Code.
+4) Click the nRF Connect icon on the left.
+5) Select "Open an existing application".
+6) Select this folder: nrf52840_adxl362_offline
+7) Click "Add Build Configuration".
+8) Select board target:
+      New SDK: nrf52840dk/nrf52840
+      Older SDK: nrf52840dk_nrf52840
+9) Build Configuration.
+10) Click Build.
+
+Expected: build finishes without errors.
+
+4. FLASH
+--------
+1) Confirm the DK appears under Connected Devices.
+2) Click Flash.
+3) Wait for "Flashing completed" or equivalent success message.
+
+5. OPEN SERIAL OUTPUT
+---------------------
+1) Open nRF Terminal or the nRF Connect Serial Terminal.
+2) Select the DK COM port.
+3) Use 115200 baud, 8 data bits, no parity, 1 stop bit.
+4) Press the DK RESET button if no text appears.
+
+Expected:
+  # ADXL362 six-position capture
+  # Sensor ready. CSV data begins below.
+  orientation,time_ms,x,y,z,magnitude
+  # Place the board in +X orientation ... press Button 1.
+
+If "ADXL362 is not ready" appears, go to Troubleshooting below.
+
+6. CAPTURE SIX POSITIONS
+------------------------
+The program asks for +X, -X, +Y, -Y, +Z and -Z in order.
+
+For each position:
+1) Place the evaluation board against a stable square surface.
+2) Point the requested printed sensor axis upward for +, downward for -.
+3) Do not hold the board in your hand.
+4) Press DK Button 1.
+5) Do not touch it. The program waits 3 seconds, then records for 5 seconds.
+6) Wait for "Completed" before moving the board.
+
+IMPORTANT: The printed axes on the evaluation board define +X/+Y/+Z.
+
+7. SAVE DATA
+------------
+Enable terminal logging before starting, or copy all terminal text afterward.
+Save as:
+  hardware_capture.csv
+
+Lines beginning with # are notes. The analysis cleanup command below ignores
+them. The useful CSV header is:
+  orientation,time_ms,x,y,z,magnitude
+
+8. CLEAN AND CALIBRATE ON THE PC
+--------------------------------
+Place hardware_capture.csv in the project's outputs folder.
+
+PowerShell from the zywie-work directory:
+  Get-Content outputs\hardware_capture.csv |
+    Where-Object { $_ -notmatch '^#' -and $_ -ne '' } |
+    Set-Content outputs\hardware_six_position.csv
+
+Then run:
+  python tools\adxl_calibration.py outputs\hardware_six_position.csv `
+    --report outputs\hardware_calibration_report.json `
+    --corrected outputs\hardware_corrected_samples.csv
+
+Expected output includes X/Y/Z offset and scale, plus magnitude error before
+and after calibration.
+
+Create the comparison plot:
+  python tools\plot_adxl_calibration.py outputs\hardware_corrected_samples.csv `
+    --output outputs\hardware_calibration_comparison.svg
+
+The SVG opens in a web browser and can be inserted into PowerPoint. The plot
+script uses only standard Python and does not require internet installation.
+
+9. TROUBLESHOOTING
+------------------
+Build says CONFIG_ADXL362 is unknown:
+- Record the installed nRF Connect SDK version. The ADXL362 driver may differ
+  in an old SDK. Do not randomly change multiple files.
+
+Build reports devicetree/pinctrl error:
+- Confirm board target is the nRF52840 DK, not another Nordic board.
+- Perform a pristine build: Actions -> Pristine Build.
+
+"ADXL362 is not ready":
+- Turn power off.
+- Recheck 3V3, both grounds, SCLK P0.31, MOSI P0.30, MISO P0.29, CS P0.28.
+- Confirm VS and VDD I/O are both powered.
+- Confirm the sensor is EVAL-ADXL362Z.
+- If possible, measure 3.3 V at the sensor.
+
+No serial text:
+- Check correct COM port and 115200 baud.
+- Press RESET.
+- Ensure USB is connected to the DK debugger USB connector.
+
+Data is constant or near zero:
+- Check that the sensor driver initialized successfully.
+- Rotate the board and see whether any axis changes.
+
+Magnitude is far from 1 g:
+- Confirm the printed values are in g.
+- Confirm the device is ADXL362, not another ADXL model.
+- Do not calibrate until communication and conversion are correct.
+
+10. WHAT TO RECORD FOR THE ENGINEERING NOTEBOOK
+-----------------------------------------------
+- Date and operator
+- DK serial number
+- ADXL evaluation board model/revision
+- Wiring and pin assignments
+- nRF Connect SDK version
+- Git/file version of firmware
+- Sensor range/ODR
+- Raw CSV filename
+- Any errors and changes made
+
+This firmware and workflow are engineering evaluation aids, not production or
+clinical software.
