@@ -12,7 +12,7 @@
 #define SENSOR_ODR_HZ_MICRO 500000
 #define SAMPLE_INTERVAL_MS 80
 #define SETTLING_SECONDS 3
-#define SAMPLES_PER_CAPTURE 600
+#define SAMPLES_PER_CAPTURE 1000
 
 static const struct device *const accelerometer =
     DEVICE_DT_GET(DT_NODELABEL(adxl362));
@@ -77,7 +77,7 @@ int main(void)
             k_sleep(K_SECONDS(1));
         }
 
-        printk("# Recording %s: %d samples at 12.5 Hz (48 seconds). Do not touch the board.\n",
+        printk("# Recording %s: %d samples at 12.5 Hz (80 seconds). Do not touch the board.\n",
                orientations[pose], SAMPLES_PER_CAPTURE);
 
         int64_t next_sample_ms = k_uptime_get();
