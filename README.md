@@ -43,9 +43,9 @@ nrf52840dk_nrf52840
 
 Build, flash, then open the DK virtual COM port at `115200 8N1`. The application
 uses DK Button 1 to guide the operator through `+X`, `-X`, `+Y`, `-Y`, `+Z`, and
-`-Z`. Each press starts a three-second settling period followed by 60 seconds
+`-Z`. Each press starts a three-second settling period followed by 48 seconds
 of CSV capture. The ADXL362 ODR is explicitly configured to its supported
-12.5 Hz setting, and the application records 600 samples per pose at 10 Hz.
+12.5 Hz setting, and the application records 600 samples per pose at 12.5 Hz.
 
 ## Calibration model
 

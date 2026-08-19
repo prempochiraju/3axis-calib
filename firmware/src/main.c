@@ -10,8 +10,7 @@
 #define GRAVITY_M_S2 9.80665
 #define SENSOR_ODR_HZ_INT 12
 #define SENSOR_ODR_HZ_MICRO 500000
-#define LOG_RATE_HZ 10
-#define SAMPLE_INTERVAL_MS (1000 / LOG_RATE_HZ)
+#define SAMPLE_INTERVAL_MS 80
 #define SETTLING_SECONDS 3
 #define SAMPLES_PER_CAPTURE 600
 
@@ -64,7 +63,7 @@ int main(void)
     }
 
     printk("# Sensor ready. CSV data begins below.\n");
-    printk("# ADXL362 ODR: 12.5 Hz; CSV collection rate: 10 Hz; samples per pose: %d\n",
+    printk("# ADXL362 ODR: 12.5 Hz; CSV collection rate: 12.5 Hz; samples per pose: %d\n",
            SAMPLES_PER_CAPTURE);
     printk("orientation,time_ms,x,y,z,magnitude\n");
 
@@ -78,9 +77,10 @@ int main(void)
             k_sleep(K_SECONDS(1));
         }
 
-        printk("# Recording %s: %d samples at 10 Hz (60 seconds). Do not touch the board.\n",
+        printk("# Recording %s: %d samples at 12.5 Hz (48 seconds). Do not touch the board.\n",
                orientations[pose], SAMPLES_PER_CAPTURE);
 
+        int64_t next_sample_ms = k_uptime_get();
         for (int sample = 0; sample < SAMPLES_PER_CAPTURE; sample++) {
             rc = sensor_sample_fetch(accelerometer);
             if (rc == 0) {
@@ -88,18 +88,21 @@ int main(void)
             }
             if (rc != 0) {
                 printk("# ERROR: sensor read failed: %d\n", rc);
-                k_msleep(SAMPLE_INTERVAL_MS);
-                continue;
+            } else {
+                double x = to_g(&accel[0]);
+                double y = to_g(&accel[1]);
+                double z = to_g(&accel[2]);
+                double magnitude = sqrt(x * x + y * y + z * z);
+
+                printk("%s,%lld,%.6f,%.6f,%.6f,%.6f\n",
+                       orientations[pose], k_uptime_get(), x, y, z, magnitude);
             }
 
-            double x = to_g(&accel[0]);
-            double y = to_g(&accel[1]);
-            double z = to_g(&accel[2]);
-            double magnitude = sqrt(x * x + y * y + z * z);
-
-            printk("%s,%lld,%.6f,%.6f,%.6f,%.6f\n",
-                   orientations[pose], k_uptime_get(), x, y, z, magnitude);
-            k_msleep(SAMPLE_INTERVAL_MS);
+            next_sample_ms += SAMPLE_INTERVAL_MS;
+            int64_t remaining_ms = next_sample_ms - k_uptime_get();
+            if (remaining_ms > 0) {
+                k_msleep((int32_t)remaining_ms);
+            }
         }
         printk("# Completed %s.\n", orientations[pose]);
     }
