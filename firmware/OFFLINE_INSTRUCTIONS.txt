@@ -71,7 +71,8 @@ For each position:
 2) Point the requested printed sensor axis upward for +, downward for -.
 3) Do not hold the board in your hand.
 4) Press DK Button 1.
-5) Do not touch it. The program waits 3 seconds, then records for 5 seconds.
+5) Do not touch it. The program waits 3 seconds, then records 600 samples over
+   60 seconds. The sensor ODR is 12.5 Hz and the CSV collection rate is 10 Hz.
 6) Wait for "Completed" before moving the board.
 
 IMPORTANT: The printed axes on the evaluation board define +X/+Y/+Z.

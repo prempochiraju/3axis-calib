@@ -8,10 +8,12 @@
 #include <zephyr/sys/printk.h>
 
 #define GRAVITY_M_S2 9.80665
-#define SAMPLE_INTERVAL_MS 10
+#define SENSOR_ODR_HZ_INT 12
+#define SENSOR_ODR_HZ_MICRO 500000
+#define LOG_RATE_HZ 10
+#define SAMPLE_INTERVAL_MS (1000 / LOG_RATE_HZ)
 #define SETTLING_SECONDS 3
-#define CAPTURE_SECONDS 5
-#define SAMPLES_PER_CAPTURE (CAPTURE_SECONDS * 1000 / SAMPLE_INTERVAL_MS)
+#define SAMPLES_PER_CAPTURE 600
 
 static const struct device *const accelerometer =
     DEVICE_DT_GET(DT_NODELABEL(adxl362));
@@ -38,11 +40,22 @@ static void wait_for_button(void)
 int main(void)
 {
     struct sensor_value accel[3];
+    const struct sensor_value odr = {
+        .val1 = SENSOR_ODR_HZ_INT,
+        .val2 = SENSOR_ODR_HZ_MICRO,
+    };
 
     printk("# ADXL362 six-position capture\n");
 
     if (!device_is_ready(accelerometer)) {
         printk("# ERROR: ADXL362 is not ready. Check 3V3, GND, SCLK, MOSI, MISO and CS.\n");
+        return 0;
+    }
+
+    int rc = sensor_attr_set(accelerometer, SENSOR_CHAN_ACCEL_XYZ,
+                             SENSOR_ATTR_SAMPLING_FREQUENCY, &odr);
+    if (rc != 0) {
+        printk("# ERROR: failed to configure ADXL362 ODR: %d\n", rc);
         return 0;
     }
     if (!gpio_is_ready_dt(&button) || gpio_pin_configure_dt(&button, GPIO_INPUT) != 0) {
@@ -51,6 +64,8 @@ int main(void)
     }
 
     printk("# Sensor ready. CSV data begins below.\n");
+    printk("# ADXL362 ODR: 12.5 Hz; CSV collection rate: 10 Hz; samples per pose: %d\n",
+           SAMPLES_PER_CAPTURE);
     printk("orientation,time_ms,x,y,z,magnitude\n");
 
     for (size_t pose = 0; pose < ARRAY_SIZE(orientations); pose++) {
@@ -63,11 +78,11 @@ int main(void)
             k_sleep(K_SECONDS(1));
         }
 
-        printk("# Recording %s for %d seconds. Do not touch the board.\n",
-               orientations[pose], CAPTURE_SECONDS);
+        printk("# Recording %s: %d samples at 10 Hz (60 seconds). Do not touch the board.\n",
+               orientations[pose], SAMPLES_PER_CAPTURE);
 
         for (int sample = 0; sample < SAMPLES_PER_CAPTURE; sample++) {
-            int rc = sensor_sample_fetch(accelerometer);
+            rc = sensor_sample_fetch(accelerometer);
             if (rc == 0) {
                 rc = sensor_channel_get(accelerometer, SENSOR_CHAN_ACCEL_XYZ, accel);
             }

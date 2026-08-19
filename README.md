@@ -43,8 +43,9 @@ nrf52840dk_nrf52840
 
 Build, flash, then open the DK virtual COM port at `115200 8N1`. The application
 uses DK Button 1 to guide the operator through `+X`, `-X`, `+Y`, `-Y`, `+Z`, and
-`-Z`. Each press starts a three-second settling period followed by five seconds
-of CSV capture.
+`-Z`. Each press starts a three-second settling period followed by 60 seconds
+of CSV capture. The ADXL362 ODR is explicitly configured to its supported
+12.5 Hz setting, and the application records 600 samples per pose at 10 Hz.
 
 ## Calibration model
 
@@ -81,4 +82,3 @@ fitting; improvement on fitting samples alone is not sufficient verification.
 - [EVAL-ADXL362Z documentation](https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adxl362z.html)
 - [nRF52840 DK documentation](https://docs.zephyrproject.org/latest/boards/nordic/nrf52840dk/doc/index.html)
 - [Nordic build workflow](https://docs.nordicsemi.com/r/bundle/nrf-connect-vscode/page/get_started/build_app_ncs.html/how-to-build-an-application)
-
