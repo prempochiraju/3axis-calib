@@ -1,0 +1,75 @@
+{
+  "input": "outputs\\hardware_capture_12_5hz_1000.csv",
+  "samples": 6000,
+  "samples_per_original_pose": {
+    "+X": 1000,
+    "-X": 1000,
+    "+Y": 1000,
+    "-Y": 1000,
+    "+Z": 1000,
+    "-Z": 1000
+  },
+  "pose_mapping": {
+    "+X": "-Y",
+    "-X": "+Y",
+    "+Y": "-X",
+    "-Y": "+X",
+    "+Z": "+Z",
+    "-Z": "-Z"
+  },
+  "model": "corrected_axis = (raw_axis - offset_axis) * scale_axis",
+  "coefficients": {
+    "x": {
+      "positive_mean_g": 0.947323,
+      "negative_mean_g": -1.06426,
+      "offset_g": -0.05846849999999998,
+      "scale": 0.9942418483353658
+    },
+    "y": {
+      "positive_mean_g": 1.018394,
+      "negative_mean_g": -1.123418,
+      "offset_g": -0.052512,
+      "scale": 0.9337887732443371
+    },
+    "z": {
+      "positive_mean_g": 1.3113540000000001,
+      "negative_mean_g": -0.721321,
+      "offset_g": 0.29501650000000007,
+      "scale": 0.9839251232981169
+    }
+  },
+  "axis_summary": [
+    {
+      "axis": "X",
+      "positive_mean_g": 0.947323,
+      "negative_mean_g": -1.06426,
+      "offset_g": -0.05846849999999998,
+      "scale": 0.9942418483353658,
+      "active_pose_raw_mae_g": 0.05846850000000003,
+      "active_pose_corrected_mae_g": 0.002547899838087728
+    },
+    {
+      "axis": "Y",
+      "positive_mean_g": 1.018394,
+      "negative_mean_g": -1.123418,
+      "offset_g": -0.052512,
+      "scale": 0.9337887732443371,
+      "active_pose_raw_mae_g": 0.07090600000000001,
+      "active_pose_corrected_mae_g": 0.00287260880039891
+    },
+    {
+      "axis": "Z",
+      "positive_mean_g": 1.3113540000000001,
+      "negative_mean_g": -0.721321,
+      "offset_g": 0.29501650000000007,
+      "scale": 0.9839251232981169,
+      "active_pose_raw_mae_g": 0.2950165,
+      "active_pose_corrected_mae_g": 0.0025686339429569723
+    }
+  ],
+  "magnitude_mae_mg": {
+    "raw": 153.47444220529277,
+    "corrected_fitting_data": 2.82941329352469
+  },
+  "caution": "Corrected metrics use the fitting dataset; independent validation is still required."
+}
