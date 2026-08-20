@@ -76,6 +76,14 @@ For hardware, preserve the original serial capture and use a separate cleaned
 CSV for analysis. Independent validation orientations should be collected after
 fitting; improvement on fitting samples alone is not sufficient verification.
 
+## Included hardware datasets
+
+The folder `outputs/axis_analysis_12_5hz_1000/separate_calibrated_uncalibrated_axis_data/`
+contains separate calibrated and uncalibrated CSV files for the X, Y, and Z axes.
+They were generated from one ADXL362, using 1,000 samples in each of six poses
+at 12.5 Hz. These are calibration-fitting data; they demonstrate the processing
+workflow but do not measure unit-to-unit variation or independent accuracy.
+
 ## Public references
 
 - [ADXL362 product page and datasheet](https://www.analog.com/en/products/adxl362.html)
