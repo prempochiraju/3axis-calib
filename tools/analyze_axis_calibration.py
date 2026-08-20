@@ -152,6 +152,9 @@ def main() -> int:
             writer.writerow({"original_orientation": row["original_orientation"], "orientation": row["orientation"],
                              "time_ms": row["time_ms"], **{axis: f'{row[f"raw_{axis}"]:.9f}' for axis in AXES}})
 
+    split_dir = args.output_dir / "separate_calibrated_uncalibrated_axis_data"
+    split_dir.mkdir(parents=True, exist_ok=True)
+
     for axis in AXES:
         path = args.output_dir / f"{axis}_axis_calibrated_data.csv"
         fields = ["sample_index", "original_orientation", "orientation", "time_ms",
@@ -174,6 +177,28 @@ def main() -> int:
                     "corrected_signed_error_g": f'{row[f"corrected_{axis}"] - expected:.9f}',
                 })
         write_plot(args.output_dir / f"{axis}_axis_raw_vs_calibrated.svg", axis, rows)
+
+        common_fields = ["sample_index", "original_orientation", "orientation", "time_ms"]
+        for data_kind in ("uncalibrated", "calibrated"):
+            value_key = f"raw_{axis}" if data_kind == "uncalibrated" else f"corrected_{axis}"
+            value_column = f"{data_kind}_{axis}_g"
+            fields = common_fields + [value_column, f"ideal_{axis}_g", "signed_error_g"]
+            split_path = split_dir / f"{axis}_axis_{data_kind}_data.csv"
+            with split_path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fields)
+                writer.writeheader()
+                for row in rows:
+                    expected = ideal(axis, row["orientation"])
+                    value = row[value_key]
+                    writer.writerow({
+                        "sample_index": row["sample_index"],
+                        "original_orientation": row["original_orientation"],
+                        "orientation": row["orientation"],
+                        "time_ms": row["time_ms"],
+                        value_column: f"{value:.9f}",
+                        f"ideal_{axis}_g": f"{expected:.1f}",
+                        "signed_error_g": f"{value - expected:.9f}",
+                    })
 
     summary_rows = []
     for axis in AXES:
